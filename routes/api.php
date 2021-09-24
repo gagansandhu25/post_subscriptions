@@ -1,6 +1,9 @@
 <?php
 
 use App\Events\PostCreated;
+use App\Helpers;
+use App\Http\Requests\CreatePostRequest;
+use App\Http\Requests\SubscribeRequest;
 use App\Models\Post;
 use App\Models\Subscription;
 use App\Models\Website;
@@ -19,23 +22,8 @@ use Illuminate\Support\MessageBag;
 |
 */
 
-Route::post('posts', function(Request $request, MessageBag $messageBag) {
-    $request->validate([
-        "title" => "required",
-        "description" => "required",
-        "website" => "required|url"
-    ]);
-
-    $websiteParsed = parse_url($request->website);
-    $websiteURL = $websiteParsed['host'] ?? "";
-
-    $website = Website::where("domain", $websiteURL)->first();
-    if (!$website) {
-        $messageBag->add("website", "Invalid website.");
-        return response()->json([
-            'errors' => $messageBag
-        ], 422);
-    }
+Route::post('posts', function(CreatePostRequest $request, MessageBag $messageBag) {
+    $website = Helpers::getWebsite($request->website);
 
     $post = Post::create([
         "title" => $request->title,
@@ -51,22 +39,8 @@ Route::post('posts', function(Request $request, MessageBag $messageBag) {
     ]);
 });
 
-Route::post('subscriptions', function(Request $request, MessageBag $messageBag) {
-    $request->validate([
-        "email" => "required|email",
-        "website" => "required|url"
-    ]);
-
-    $websiteParsed = parse_url($request->website);
-    $websiteURL = $websiteParsed['host'] ?? "";
-
-    $website = Website::where("domain", $websiteURL)->first();
-    if (!$website) {
-        $messageBag->add("website", "You cannot subscribe this website.");
-        return response()->json([
-            'errors' => $messageBag
-        ], 422);
-    }
+Route::post('subscriptions', function(SubscribeRequest $request) {
+    $website = Helpers::getWebsite($request->website);
 
     $subscribed = Subscription::where("email", $request->email)
         ->where("website_id", $website->id)
