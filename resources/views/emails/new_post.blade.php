@@ -1,8 +1,7 @@
 @component('mail::message')
-    # New Post on {{ $website->domain }}
+# New post on {{ $website->domain }}
 
-    ### {{ $post->title }}
+## {{ $post->title }}
 
-    {{ $post->description }}
-
+{{ $post->description }}
 @endcomponent

@@ -9,6 +9,7 @@ use App\Models\Subscription;
 use App\Models\Website;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
 
 class NotifySubscribers
@@ -30,10 +31,9 @@ class NotifySubscribers
      */
     public function handle(PostCreated $event)
     {
-        $subscribers = Subscription::where("website_id", $event->website->id)->pluck("email");
-
-        foreach ($subscribers as $item) {
-            Mail::to($item)->send(new NewPost($event->website, $event->post));
-        }
+        Artisan::call("PostNotification:send", [
+            "website" => $event->website,
+            "post" => $event->post
+        ]);
     }
 }
